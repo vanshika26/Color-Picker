@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Color Picker</title>
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f4;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .color-picker-container {
+            text-align: center;
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 6px 30px rgba(0, 0, 0, 0.2);
+            width: 320px;
+            transition: box-shadow 0.3s;
+        }
+
+        .color-picker-container:hover {
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        input[type="color"] {
+            width: 100%;
+            height: 60px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            outline: none;
+            transition: transform 0.2s;
+        }
+
+        input[type="color"]:hover {
+            transform: scale(1.05);
+        }
+
+        #color-box {
+            width: 100%;
+            height: 120px;
+            margin: 20px 0;
+            border-radius: 10px;
+            border: 2px solid #ddd;
+            transition: border-color 0.2s;
+        }
+
+        .color-code {
+            font-size: 1.2em;
+            margin-top: 10px;
+            color: #555;
+            letter-spacing: 0.5px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .code-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 10px;
+        }
+
+        .code {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin: 0 5px;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        .code:hover {
+            background-color: #e9ecef;
+            color: #000;
+        }
+
+        .history {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .history-item {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid #ddd;
+        }
+
+        .button {
+            margin-top: 10px;
+            padding: 10px;
+            width: 100%;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="color-picker-container">
+        <h1>Color Picker</h1>
+        <div id="color-box" style="background-color: #ff0000;"></div>
+
+        <input type="color" id="color-input" value="#ff0000">
+        <div class="color-code">
+            <div class="code-container">
+                <span>Hex:</span>
+                <div class="code" id="hex-code">#ff0000</div>
+            </div>
+            <div class="code-container">
+                <span>RGB:</span>
+                <div class="code" id="rgb-code">rgb(255, 0, 0)</div>
+            </div>
+            <div class="code-container">
+                <span>HSL:</span>
+                <div class="code" id="hsl-code">hsl(0, 100%, 50%)</div>
+            </div>
+        </div>
+        <button class="button" onclick="generateRandomColor()">Random Color</button>
+        <div class="history" id="color-history"></div>
+    </div>
+
+    <script>
+        // Array to store the color history (up to 5 recent colors)
+        const colorHistory = [];
+
+        // Function to update the color box, hex, RGB, and HSL displays
+        function updateColor() {
+            const colorInput = document.getElementById('color-input');
+            const colorBox = document.getElementById('color-box');
+            const hexCode = document.getElementById('hex-code');
+            const rgbCode = document.getElementById('rgb-code');
+            const hslCode = document.getElementById('hsl-code');
+
+            // Get the selected color value from the input
+            const selectedColor = colorInput.value;
+
+            // Update color box and hex code display
+            colorBox.style.backgroundColor = selectedColor;
+            hexCode.textContent = selectedColor;
+
+            // Convert the selected color to RGB and update RGB display
+            const rgb = hexToRgb(selectedColor);
+            rgbCode.textContent = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
+
+            // Convert the selected color to HSL and update HSL display
+            const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+            hslCode.textContent = `hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`;
+
+            // Add the selected color to the history
+            addToHistory(selectedColor);
+        }
+
+        // Function to convert a hex color string to an RGB object
+        function hexToRgb(hex) {
+            const r = parseInt(hex.slice(1, 3), 16);
+            const g = parseInt(hex.slice(3, 5), 16);
+            const b = parseInt(hex.slice(5, 7), 16);
+            return { r, g, b }; // Return RGB values as an object
+        }
+
+        // Function to convert RGB values to HSL
+        function rgbToHsl(r, g, b) {
+            // Normalize RGB values to the 0-1 range
+            r /= 255;
+            g /= 255;
+            b /= 255;
+
+            const max = Math.max(r, g, b);
+            const min = Math.min(r, g, b);
+            const l = (max + min) / 2; // Calculate luminance
+            const d = max - min; // Difference between max and min (chroma)
+            const s = d === 0 ? 0 : d / (1 - Math.abs(2 * l - 1)); // Calculate saturation
+
+            let h = 0; // Initialize hue
+
+            // Calculate hue based on which RGB component is max
+            if (d !== 0) {
+                if (max === r) h = (g - b) / d + (g < b ? 6 : 0);
+                else if (max === g) h = (b - r) / d + 2;
+                else if (max === b) h = (r - g) / d + 4;
+                h /= 6; // Scale hue to a 0-1 range
+            }
+
+            return {
+                h: Math.round(h * 360), // Convert hue to degrees
+                s: Math.round(s * 100), // Convert saturation to percentage
+                l: Math.round(l * 100)  // Convert luminance to percentage
+            };
+        }
+
+        // Function to add the current color to the color history and display it
+        function addToHistory(color) {
+            // Add color to the beginning of the array, keep max 5 items
+            colorHistory.unshift(color);
+            if (colorHistory.length > 5) colorHistory.pop();
+
+            // Update the history display with recent colors
+            const historyContainer = document.getElementById('color-history');
+            historyContainer.innerHTML = colorHistory.map(col =>
+                `<div class="history-item" style="background-color: ${col};" onclick="selectColor('${col}')"></div>`
+            ).join('');
+        }
+
+        // Function to select a color from the history and update the color input
+        function selectColor(color) {
+            document.getElementById('color-input').value = color;
+            updateColor(); // Update the displays with the selected color
+        }
+
+        // Function to generate a random color and update the input and displays
+        function generateRandomColor() {
+            const randomColor = '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
+            document.getElementById('color-input').value = randomColor;
+            updateColor(); // Update displays with the random color
+        }
+
+        // Event listener to copy color code to clipboard on click
+        document.querySelectorAll('.code').forEach(el => el.addEventListener('click', () => {
+            navigator.clipboard.writeText(el.textContent); // Copy code text to clipboard
+            el.style.backgroundColor = '#d4edda'; // Temporarily change color to indicate copy
+            setTimeout(() => el.style.backgroundColor = '', 800); // Reset color after 0.8 seconds
+        }));
+
+        // Event listener to update color when the color input changes
+        document.getElementById('color-input').oninput = updateColor;
+
+        // Initialize displays with the default color
+        updateColor();
+
+    </script>
+
+</body>
+
+</html>
